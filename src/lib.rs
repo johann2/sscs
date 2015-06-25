@@ -109,8 +109,8 @@ mod tests;
 #[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd)]
 pub struct Entity
 {
-	id:usize,
-	version:usize
+	pub id:usize,
+	pub version:usize
 }
 
 pub struct World<T,C>
@@ -120,7 +120,7 @@ pub struct World<T,C>
 	pub globaldata:C,
 	recycled_ids:Vec<Entity>,
 	entities_to_delete:Vec<Entity>,
-	components:Vec<u32>,
+	pub components:Vec<u32>,
 	next_id:usize,
 
 }
