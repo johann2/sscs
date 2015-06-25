@@ -7,7 +7,7 @@ Currently runs only on nightly builds.
 * Simple
 * Entity is an index to component table
 * Everything is kept in ```Vec```s
-* Uses bitmasks to keep track which components an entity has. This limits the number of component types to 31. (one bit is to determine if the entity is alive)
+* Uses bitmasks to keep track which components an entity has. This limits the number of component types to 31, but should be really fast (haven't checked yet, though)
 * Systems have no state
 
 ##Tutorial
