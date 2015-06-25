@@ -3,7 +3,7 @@ Simple entity-component library inspired by [ecs-rs](https://github.com/HeroesGr
 
 Currently runs only on nightly builds.
 
-###Defining Attributes
+###Main Points:
 * Simple
 * Entity is an index to component table
 * Everything is kept in ```Vec```s
@@ -11,6 +11,7 @@ Currently runs only on nightly builds.
 * Systems have no state
 
 ##Tutorial
+There's also a working example in examples folder, if something is too confusing here.
 
 ###Importing
 Add to cargo.toml:
