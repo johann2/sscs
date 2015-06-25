@@ -3,9 +3,9 @@
 use std::mem;
 
 use ::{World,Component,Entity,System};
-static positions_MASK:u32=1<<1;
-static speeds_MASK:u32   =1<<2;
-static targets_MASK:u32   =1<<3;
+static POSITION_MASK:u32=1<<1;
+static SPEED_MASK:u32   =1<<2;
+static TARGET_MASK:u32  =1<<3;
 
 #[derive(Clone,Copy,PartialEq,PartialOrd)]
 struct Vector2{x:f32,y:f32}
@@ -32,9 +32,9 @@ impl_entity_data!
 {
 	EntityData <()>
 	{
-		Speed:speeds,
-		Position:positions,
-		Target:targets
+		Speed:speeds:SPEED_MASK,
+		Position:positions:POSITION_MASK,
+		Target:targets:TARGET_MASK
 	}
 }
 
@@ -42,6 +42,7 @@ impl_entity_data!
 #[test]
 fn test_id_recycle() 
 {
+	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let mut ecs:World<EntityData,()>=World::new();
 	let entity1=ecs.add_entity();
 	let entity2=ecs.add_entity();
@@ -50,7 +51,7 @@ fn test_id_recycle()
 	assert!(ecs.entity_valid(&entity2));
 
 	ecs.delete_entity(&entity1);
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 
 	assert!(!ecs.entity_valid(&entity1));
 	assert!(ecs.entity_valid(&entity2));
@@ -68,6 +69,7 @@ fn test_id_recycle()
 fn test_invalidation() 
 {
 	let mut ecs:World<EntityData,()>=World::new();
+	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 	let entity2=ecs.add_entity();
 	let entity1dup=entity1;
@@ -77,7 +79,7 @@ fn test_invalidation()
 	assert!(ecs.entity_valid(&entity2));
 
 	ecs.delete_entity(&entity1);
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 
 	assert!(!ecs.entity_valid(&entity1));
 	assert!(!ecs.entity_valid(&entity1dup));
@@ -89,12 +91,13 @@ fn test_invalidation()
 fn component_add() 
 {
 	let mut ecs:World<EntityData,()>=World::new();
+	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 
 	assert!(!Component::<Speed>::has(&ecs,&entity1));
 	ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
 	assert!(Component::<Speed>::has(&ecs,&entity1));
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 
 }
 
@@ -103,6 +106,7 @@ fn component_add()
 fn component_remove() 
 {
 	let mut ecs:World<EntityData,()>=World::new();
+	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 
 	assert!(!Component::<Speed>::has(&ecs,&entity1));
@@ -121,24 +125,25 @@ fn component_remove()
 	Component::<Speed>::remove(&mut ecs,&entity1);
 	assert!(!Component::<Speed>::has(&ecs,&entity1));
 	assert!(Component::<Position>::has(&ecs,&entity1));
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 }
 
 #[test]
 fn component_remove_with_entity() 
 {
 	let mut ecs:World<EntityData,()>=World::new();
+	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 	ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
 	ecs.add(&entity1,&Position{val:Vector2{x:0.0,y:1.0}});
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 	ecs.delete_entity(&entity1);
 
 
 	let entity2=ecs.add_entity();
 	assert!(!Component::<Speed>::has(&ecs,&entity2));
 	assert!(!Component::<Position>::has(&ecs,&entity2));
-	ecs.update(&vec![]);
+	ecs.update(&systems);
 
 }
 
@@ -147,10 +152,10 @@ struct TestSystem;
 
 impl System<EntityData,()> for TestSystem 
 {
-	fn process(&self,interested:Vec<Entity>,world:&mut World<EntityData,()>)
+	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
 	{
 		let mut count=0;
-		for e in interested.iter()
+		for e in entities.iter()
 		{
 			assert!(Component::<Speed>::has(world,&e));
 			assert!(Component::<Position>::has(world,&e));
@@ -159,9 +164,11 @@ impl System<EntityData,()> for TestSystem
 		assert_eq!(count,5);
 	}
 
-	fn get_component_mask(&self)->u32
+	fn get_interesting_entities(&self,world:&mut World<EntityData,()>)->Vec<Entity>
 	{
-		0|speeds_MASK|positions_MASK
+		let mask=0|SPEED_MASK|POSITION_MASK;
+
+		world.entities.iter().filter(|e| world.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
 	}
 }
 
@@ -181,17 +188,19 @@ impl System<EntityData,()> for TestSystem2
 		}
 	}
 
-	fn get_component_mask(&self)->u32
+	fn get_interesting_entities(&self,world:&mut World<EntityData,()>)->Vec<Entity>
 	{
-		0|speeds_MASK|positions_MASK
+		let mask=0|SPEED_MASK|POSITION_MASK;
+
+		world.entities.iter().filter(|&e| world.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
 	}
 }
 
 #[test]
 fn system_filter() 
 {
-	let mut ecs:World<EntityData,()>=World::new();
 	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
+	let mut ecs:World<EntityData,()>=World::new();
 	systems.push(Box::new(TestSystem));
 
 	for _ in 0..4
@@ -227,8 +236,8 @@ fn system_filter()
 #[test]
 fn system_add_remove_entities() 
 {
-	let mut ecs:World<EntityData,()>=World::new();
 	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
+	let mut ecs:World<EntityData,()>=World::new();
 	systems.push(Box::new(TestSystem2));
 
 	for _ in 0..4
@@ -264,7 +273,7 @@ fn system_add_remove_entities()
 
 	for e in ecs.entities.iter()
 	{
-		if (ecs.entity_valid(&e))
+		if ecs.entity_valid(&e)
 		{
 			let success=!Component::<Position>::has(&ecs,&e) || !Component::<Speed>::has(&ecs,&e);
 			assert!(success);

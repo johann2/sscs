@@ -1,4 +1,3 @@
-#![feature(concat_idents)]
 #[allow(dead_code)]
 
 #[macro_export]
@@ -7,7 +6,7 @@ macro_rules! impl_entity_data
 {
 	$entity_type_name:ident <$global_data_name:ty>
 	{
-		$($datatype:ident:$plural:ident),+
+		$($datatype:ident:$plural:ident:$mask:ident),+
 	}
 }=>
 
@@ -48,7 +47,7 @@ macro_rules! impl_entity_data
 		{
 			if self.entity_valid(&entity)
 			{
-				self.components[entity.id]&concat_idents!($plural,_MASK)!=0
+				self.components[entity.id]&$mask!=0
 			}
 			else
 			{
@@ -60,7 +59,7 @@ macro_rules! impl_entity_data
 		{
 			if self.entity_valid(&entity)
 			{
-				if self.components[entity.id]&concat_idents!($plural,_MASK)!=0
+				if self.components[entity.id]&$mask!=0
 				{
 					Some(self.componentdata.$plural[entity.id].clone())
 				}
@@ -80,7 +79,7 @@ macro_rules! impl_entity_data
 			if self.entity_valid(&entity)
 			{
 				self.componentdata.$plural[entity.id]=comp.clone();
-				self.components[entity.id]|=concat_idents!($plural,_MASK);
+				self.components[entity.id]|=$mask;
 			}
 			else
 			{
@@ -92,7 +91,7 @@ macro_rules! impl_entity_data
 		{
 			if self.entity_valid(&entity)
 			{
-				self.components[entity.id]^=concat_idents!($plural,_MASK);
+				self.components[entity.id]^=$mask;
 			}
 			else
 			{
@@ -128,8 +127,8 @@ pub struct World<T,C>
 
 pub trait System<T,C>
 {
-	fn process(&self,interested:Vec<Entity>,world:&mut World<T,C>);
-	fn get_component_mask(&self)->u32;
+	fn process(&self,entities:Vec<Entity>,world:&mut World<T,C>);
+	fn get_interesting_entities(&self,world:&mut World<T,C>)->Vec<Entity>;
 	// Add code here
 }
 
@@ -214,7 +213,7 @@ impl<T:Components,C:GlobalData> World<T,C>
 		self.components[e.id]!=0 && self.entities[e.id].version==e.version
 	}
 
-	pub fn update(&mut self,systems:&Vec<Box<System<T,C>>>)
+	pub fn update(&mut self,systems:&Vec<Box<System<T,C>>>) 
 	{
 		for e in self.entities_to_delete.iter()
 		{
@@ -224,17 +223,8 @@ impl<T:Components,C:GlobalData> World<T,C>
 
 		for system in systems.iter()
 		{
-			let interested_mask=system.get_component_mask();
-			let mut interested_entities=Vec::with_capacity(self.entities.len());
-
-			for e in self.entities.iter()
-			{
-				if self.components[e.id]&interested_mask==interested_mask
-				{
-					interested_entities.push(*e);
-				}
-			}
-			system.process(interested_entities,self);
+			let entitylist=system.get_interesting_entities(self);
+			system.process(entitylist,self);
 		}
 
 	}
