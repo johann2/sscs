@@ -103,16 +103,16 @@ macro_rules! impl_entity_data
 }
 }
 
-
-mod tests;
-
 #[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd)]
+/// The entity id struct. 
 pub struct Entity
 {
+	///Use this to index `World::componentdata` fields
 	pub id:usize,
-	pub version:usize
+	version:usize
 }
 
+///This struct holds everything related to entity-component system.
 pub struct World<T,C>
 {
 	pub entities:Vec<Entity>,
@@ -125,19 +125,22 @@ pub struct World<T,C>
 
 }
 
+///Trait for systems
 pub trait System<T,C>
 {
 	fn process(&self,entities:Vec<Entity>,world:&mut World<T,C>);
 	fn get_interesting_entities(&self,world:&mut World<T,C>)->Vec<Entity>;
-	// Add code here
+	
 }
 
+///Internal trait for World::componentdata
 pub trait Components
 {
 	fn new()->Self;
 	fn extend(&mut self);
 }
 
+///Trait for data not directly associated with entities
 pub trait GlobalData
 {
 	fn new()->Self;
@@ -149,6 +152,7 @@ impl GlobalData for ()
 	{()}
 }
 
+///Trait for component access
 pub trait Component<T>
 {
 	fn has(&self,entity:&Entity)->bool;
@@ -161,6 +165,7 @@ pub trait Component<T>
 
 impl<T:Components,C:GlobalData> World<T,C>
 {
+	///Creates a new `World`
 	pub fn new()->World<T,C>
 	{
 		World
@@ -174,7 +179,7 @@ impl<T:Components,C:GlobalData> World<T,C>
 			next_id:0,
 		}
 	}
-
+	///Adds a new entity
 	pub fn add_entity(&mut self)->Entity
 	{
 		let entity=self.recycled_ids.pop();
@@ -199,26 +204,30 @@ impl<T:Components,C:GlobalData> World<T,C>
 			}
 		}
 	}
-	
+	///Marks an entity for deletion.
+	///The entity gets actually deleted the next time you call `update`
 	pub fn delete_entity(&mut self,e:&Entity)
 	{
-		if self.entity_valid(e)
-		{
-			self.entities_to_delete.push(*e);
-		}
+		self.entities_to_delete.push(*e);
 	}
 
+	///Checks if entity actually exists.
+	///Deleted entities also fail this check.
 	pub fn entity_valid(&self,e:&Entity)->bool
 	{
 		self.components[e.id]!=0 && self.entities[e.id].version==e.version
 	}
 
+	///Removes entities and runs systems.
 	pub fn update(&mut self,systems:&Vec<Box<System<T,C>>>) 
 	{
 		for e in self.entities_to_delete.iter()
 		{
-			self.components[e.id]=0;
-			self.recycled_ids.push(self.entities[e.id]);
+			if self.entity_valid(e)
+			{
+				self.components[e.id]=0;
+				self.recycled_ids.push(self.entities[e.id]);
+			}
 		}
 
 		for system in systems.iter()
