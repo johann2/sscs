@@ -24,7 +24,7 @@ Add to your crate root:
 `extern crate simple_ecs`
 
 ###Defining your components
-Components must implement `Clone` and every component type must have an unique name
+Components must implement `Clone` and `Default` and every component type must have an unique name
 So, for example:
 ```rust
 #[derive(Clone)]
