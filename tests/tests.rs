@@ -1,31 +1,40 @@
 #[macro_use]
 extern crate simple_ecs;
-use std::mem;
 
 use simple_ecs::{World,Component,Entity,System};
 static POSITION_MASK:u32=1<<1;
 static SPEED_MASK:u32   =1<<2;
 static TARGET_MASK:u32  =1<<3;
+static GENERIC1_MASK:u32  =1<<4;
+static GENERIC2_MASK:u32  =1<<5;
 
-#[derive(Clone,Copy,PartialEq,PartialOrd)]
+#[derive(Clone,Copy,PartialEq,PartialOrd,Default)]
 struct Vector2{x:f32,y:f32}
 
-#[derive(Clone,PartialEq)]
+#[derive(Clone,PartialEq,Default)]
 pub struct Speed 
 {
     val:Vector2
 }
 
-#[derive(Clone,PartialEq)]
+
+#[derive(Clone,PartialEq,Default)]
 pub struct Position
 {
     val:Vector2
 }
 
-#[derive(Clone,PartialEq)]
+
+#[derive(Clone,PartialEq,Default)]
 pub struct Target
 {
     val:Option<Entity>,
+}
+
+#[derive(Clone,PartialEq,Default)]
+pub struct Generic<T:Clone>
+{
+	val:T,
 }
 
 impl_entity_data!
@@ -34,7 +43,9 @@ impl_entity_data!
 	{
 		Speed:speeds:SPEED_MASK,
 		Position:positions:POSITION_MASK,
-		Target:targets:TARGET_MASK
+		Target:targets:TARGET_MASK,
+		Generic<usize>:generic_1:GENERIC1_MASK,
+		Generic<u8>:generic_2:GENERIC2_MASK
 	}
 }
 
@@ -250,6 +261,7 @@ fn system_add_remove_entities()
 
 	let entity2=ecs.add_entity();
 	ecs.add(&entity2,&Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity2,&Generic::<usize>{val:10});
 
 	let entity3=ecs.add_entity();
 	ecs.add(&entity3,&Position{val:Vector2{x:0.0,y:1.0}});

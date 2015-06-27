@@ -6,7 +6,6 @@ extern crate ncurses;
 use simple_ecs::{System,World,Entity,Component};
 use std::iter;
 use std::iter::FromIterator;
-use std::mem;
 
 
 //Helper functions
@@ -23,19 +22,19 @@ fn random_vector(mult:f32)->(f32,f32)
 
 //Component structs
 
-#[derive(Clone,PartialEq)]
+#[derive(Clone,PartialEq,Default)]
 pub struct Speed 
 {
     val:(f32,f32)
 }
 
-#[derive(Clone,PartialEq)]
+#[derive(Clone,PartialEq,Default)]
 pub struct Position
 {
     val:(f32,f32)
 }
 
-#[derive(Clone,PartialEq)]
+#[derive(Clone,PartialEq,Default)]
 pub struct Character
 {
     val:char

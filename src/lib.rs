@@ -6,7 +6,7 @@ macro_rules! impl_entity_data
 {
 	$entity_type_name:ident <$global_data_name:ty>
 	{
-		$($datatype:ident:$plural:ident:$mask:ident),+
+		$($datatype:ty:$plural:ident:$mask:ident),+
 	}
 }=>
 
@@ -31,12 +31,9 @@ macro_rules! impl_entity_data
 		}
 		fn extend(&mut self)
 		{
-			unsafe
-			{
-				$(
-				self.$plural.push(mem::uninitialized());
-				)+
-			}
+			$(
+			self.$plural.push(Default::default());
+			)+
 		}
 	}
 
