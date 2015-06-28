@@ -49,7 +49,6 @@ impl_entity_data!
 	}
 }
 
-
 #[test]
 fn test_id_recycle() 
 {

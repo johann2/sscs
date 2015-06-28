@@ -1,3 +1,4 @@
+extern crate rustc_serialize;
 #[allow(dead_code)]
 
 #[macro_export]
@@ -100,7 +101,7 @@ macro_rules! impl_entity_data
 }
 }
 
-#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd)]
+#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable)]
 /// The entity id struct. 
 pub struct Entity
 {
@@ -213,6 +214,11 @@ impl<T:Components,C:GlobalData> World<T,C>
 	pub fn entity_valid(&self,e:&Entity)->bool
 	{
 		self.components[e.id]!=0 && self.entities[e.id].version==e.version
+	}
+
+	pub fn entities_with_components(&self,mask:u32)->Vec<Entity>
+	{
+		self.entities.iter().filter(|&e| self.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
 	}
 
 	///Removes entities and runs systems.

@@ -3,6 +3,9 @@ name = "simple_ecs"
 version = "0.1.0"
 authors = ["Johann Tael <jntael@gmail.com>"]
 
+[dependencies]
+rustc-serialize = "*"
+
 [dev-dependencies]
 ncurses = "*"
 rand    = "0.3"
