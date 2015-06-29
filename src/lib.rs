@@ -101,7 +101,7 @@ macro_rules! impl_entity_data
 }
 }
 
-#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable)]
+#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable,Default,Hash)]
 /// The entity id struct. 
 pub struct Entity
 {
