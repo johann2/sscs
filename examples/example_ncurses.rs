@@ -68,7 +68,7 @@ struct MovementSystem;
 
 impl System<EntityData,()> for MovementSystem
 {
-	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
+	fn process(&mut self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
 	{
 		for e in entities.iter()
 		{
@@ -87,10 +87,9 @@ impl System<EntityData,()> for MovementSystem
 		}
 	}
 
-	fn get_interesting_entities(&self,world:&mut World<EntityData,()>)->Vec<Entity>
+	fn get_entity_mask(&self)->u32
 	{
-		let mask=0|SPEED_MASK|POSITION_MASK;
-		world.entities.iter().filter(|&e| world.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
+		SPEED_MASK|POSITION_MASK
 	}
 }
 
@@ -98,7 +97,7 @@ struct RenderSystem;
 
 impl System<EntityData,()> for RenderSystem
 {
-	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
+	fn process(&mut self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
 	{
 //		world.globaldata.display=init_2d_vec(30,30,' ');
 
@@ -113,10 +112,9 @@ impl System<EntityData,()> for RenderSystem
 		}
 	}
 
-	fn get_interesting_entities(&self,world:&mut World<EntityData,()>)->Vec<Entity>
+	fn get_entity_mask(&self)->u32
 	{
-		let mask=0|CHARACTER_MASK|POSITION_MASK;
-		world.entities.iter().filter(|&e| world.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
+		CHARACTER_MASK|POSITION_MASK
 	}
 }
 
@@ -153,7 +151,8 @@ fn main()
 	loop 
 	{
 		ncurses::erase();
-		world.update(&systems);
+		world.update(&mut systems);
 		ncurses::refresh();
 	}
 }
+ 

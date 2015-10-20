@@ -53,13 +53,13 @@ macro_rules! impl_entity_data
 			}
 		}
 
-		fn get(&self,entity:&$crate::Entity)->Option<$datatype>
+		fn get<'a>(&'a self,entity:&$crate::Entity)->Option<&'a $datatype>
 		{
 			if self.entity_valid(&entity)
 			{
 				if self.components[entity.id]&$mask!=0
 				{
-					Some(self.componentdata.$plural[entity.id].clone())
+					Some(&self.componentdata.$plural[entity.id])
 				}
 				else 
 				{
@@ -71,6 +71,26 @@ macro_rules! impl_entity_data
 				panic!("Attempt to query an invalid entity");
 			}
 		}
+
+		fn get_mut<'a>(&'a mut self,entity:&$crate::Entity)->Option<&'a mut $datatype>
+		{
+			if self.entity_valid(&entity)
+			{
+				if self.components[entity.id]&$mask!=0
+				{
+					Some(&mut self.componentdata.$plural[entity.id])
+				}
+				else 
+				{
+					None
+				}
+			}
+			else
+			{
+				panic!("Attempt to query an invalid entity");
+			}
+		}
+
 
 		fn add(&mut self,entity:&$crate::Entity,comp:&$datatype)
 		{
@@ -126,8 +146,8 @@ pub struct World<T,C>
 ///Trait for systems
 pub trait System<T,C>
 {
-	fn process(&self,entities:Vec<Entity>,world:&mut World<T,C>);
-	fn get_interesting_entities(&self,world:&mut World<T,C>)->Vec<Entity>;
+	fn process(&mut self,entities:Vec<Entity>,world:&mut World<T,C>);
+	fn get_entity_mask(&self)->u32;
 	
 }
 
@@ -154,7 +174,8 @@ impl GlobalData for ()
 pub trait Component<T>
 {
 	fn has(&self,entity:&Entity)->bool;
-	fn get(&self,entity:&Entity)->Option<T>;
+	fn get(&self,entity:&Entity)->Option<&T>;
+	fn get_mut(&mut self,entity:&Entity)->Option<&mut T>;
 	fn add(&mut self,entity:&Entity,comp:&T);
 	fn remove(&mut self,entity:&Entity);
 }
@@ -222,7 +243,7 @@ impl<T:Components,C:GlobalData> World<T,C>
 	}
 
 	///Removes entities and runs systems.
-	pub fn update(&mut self,systems:&Vec<Box<System<T,C>>>) 
+	pub fn update(&mut self,systems:&mut Vec<Box<System<T,C>>>) 
 	{
 		for e in self.entities_to_delete.iter()
 		{
@@ -233,9 +254,10 @@ impl<T:Components,C:GlobalData> World<T,C>
 			}
 		}
 
-		for system in systems.iter()
+		for system in systems.iter_mut()
 		{
-			let entitylist=system.get_interesting_entities(self);
+			let mask=system.get_entity_mask();
+			let entitylist=self.entities_with_components(mask);
 			system.process(entitylist,self);
 		}
 
