@@ -1,9 +1,9 @@
 #[macro_use]
-extern crate simple_ecs;
+extern crate sscs;
 extern crate rand;
 extern crate ncurses;
 
-use simple_ecs::{System,World,Entity};
+use sscs::{System,World,Entity};
 use std::iter;
 use std::iter::FromIterator;
 

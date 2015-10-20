@@ -1,4 +1,4 @@
-# simple-ecs
+# sscs
 Simple entity-component library inspired by [ecs-rs](https://github.com/HeroesGrave/ecs-rs) and [entityx](https://github.com/alecthomas/entityx) for Rust. I've only tested it on nightly builds, but it should work on stable, too.
 
 ###Defining features:
@@ -14,7 +14,7 @@ There's a working example in the examples folder, if something is too confusing 
 Add to cargo.toml:
 ```
 [dependencies.simple_ecs]
-git = "https://github.com/johann2/simple-ecs.git"
+git = "https://github.com/johann2/sscs.git"
 ```
 
 Add to your crate root:
