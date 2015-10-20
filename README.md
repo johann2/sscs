@@ -1,17 +1,14 @@
 # simple-ecs
-Simple entity-component library inspired by [ecs-rs](https://github.com/HeroesGrave/ecs-rs) and [entityx](https://github.com/alecthomas/entityx) for Rust
+Simple entity-component library inspired by [ecs-rs](https://github.com/HeroesGrave/ecs-rs) and [entityx](https://github.com/alecthomas/entityx) for Rust. I've only tested it on nightly builds, but it should work on stable, too.
 
-Currently runs only on nightly builds.
-
-###Main Points:
+###Defining features:
 * Simple
 * Entity is an index to component table
 * Everything is kept in ```Vec```s
 * Uses bitmasks to keep track which components an entity has. This limits the number of component types to 31, but should be really fast (haven't checked yet, though)
-* Systems have no state
 
 ##Tutorial
-There's also a working example in examples folder, if something is too confusing here.
+There's a working example in the examples folder, if something is too confusing here.
 
 ###Importing
 Add to cargo.toml:
@@ -24,44 +21,28 @@ Add to your crate root:
 `extern crate simple_ecs`
 
 ###Defining your components
-Components must implement `Clone` and `Default` and every component type must have an unique name
+Components must implement `Default` and every component type must have an unique name
 So, for example:
 ```rust
-#[derive(Clone)]
-pub struct Speed 
-{
+pub struct Speed {
     val:(f32,f32)
 }
 
-#[derive(Clone)]
-pub struct Position
-{
+pub struct Position {
     val:(f32,f32)
 }
-```
-
-###Defining component bitmasks
-Unfortunately, it's impossible to write a macro that defines bitmasks, so you have to define them manually.
-They are used mostly internally to filter out entities with specific components.
-
-A good name is your component name in uppercase+_MASK.
-```
-static POSITION_MASK:u32=1<<1;
-static SPEED_MASK:u32   =1<<2;
 ```
 
 ###Registering Components
 A macro implements most of the code needed for accessing components and entities.
+The last column, bitmask has to be a power of two and unique for every component.
 For components defined above, it would look like this:
-
 ```rust
-impl_entity_data!
-{
-	EntityData <()>
-	{
-    //Class name:database field name:bitmask name
-		Speed:speeds:SPEED_MASK,
-		Position:positions:POSITION_MASK,
+impl_entity_data! {
+	EntityData <()>	{
+		//Class name	:database field name	:bitmask
+		Speed		:speeds			:1<<1,
+		Position	:positions		:1<<2,
 	}
 }
 ```
@@ -81,37 +62,35 @@ ecs.remove_entity(&entity);                   //Remove an entity.
 //Checking if an entity is valid is important, because the following functions will panic if it isn't:
 //(let's assume `entity` didn't get deleted yet)
 
-ecs.add(&entity,&Position{val:(10.0,0.0)});   //Add a new Position component
-ecs.add(&entity,&Speed{val:(0.0,0.0)});       //          Speed
-//if a component exists, `add` overwrites it.
+ecs.add(&entity,Position{val:(10.0,0.0)});   //Add a new Position component
+ecs.add(&entity,Speed{val:(0.0,0.0)});       //          Speed
 
-//get a copy of a component, wrapped in an Option
-let position=Component::<Position>::get(&ecs,&entity); 
+//If a component exists, `add` overwrites it. An entity can only have one of every type of component.
+
+//get an optional reference to a component:
+let position=ecs.get::<Position>(&entity); 
 
 //check if an entity has a component
-//these function calls look a bit off, but I'm not sure how to improve them
-assert!(!Component::<Speed>::has(&ecs,&entity)); 
+assert!(ecs.has::<Speed>(&entity)); 
 
 //Remove a component
-Component::<Speed>::remove(&ecs,&entity);
+ecs.remove::<Speed>(&entity);
 
 ```
 
 ###Systems
-Systems need to implement the `System` trait
-For now, they are immutable and shouldn't really contain any data.
+Systems need to implement the `System` trait. Systems aren't serializable, so they should only contain data for caching and stuff like that.
 
 ```rust
 struct MovementSystem;
 
 impl System<EntityData,()> for MovementSystem
 {
-  //processing function, recieves a list of entities to process and hopefully does it.
-	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)
-	{
-		for e in entities.iter()
-		{
-      //world.componentdata.{field name}[entity.id] is a faster way to access components, but really unsafe.
+	//processing function, recieves a list of entities that match the bitmask returned by get_entity_mask
+	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)	{
+		for e in entities.iter() {
+			//world.componentdata.{field name}[entity.id] is a faster way to access components, 
+			//but really unsafe.	
 			let position=world.componentdata.positions[e.id].val;
 			let speed=world.componentdata.speeds[e.id].val;
 			world.componentdata.positions[e.id].val=(position.0+speed.0,position.1+speed.1);
@@ -119,12 +98,8 @@ impl System<EntityData,()> for MovementSystem
 		}
 	}
 
-  //this function filters all the entities for processing.
-  //in this case, it selects all the entities that have the `Speed` and `Position` component.
-	fn get_interesting_entities(&self,world:&mut World<EntityData,()>)->Vec<Entity>
-	{
-		let mask=0|SPEED_MASK|POSITION_MASK;
-		world.entities.iter().filter(|&e| world.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
+	fn get_entity_mask(&self,world:&mut World<EntityData,()>)->Vec<Entity>	{
+		Speed::mask()|Position::mask()
 	}
 }
 ```
@@ -144,9 +119,7 @@ systems.push(Box::new(MovementSystem));
 
 //Main loop
 
-```rust
-loop 
-{
+loop {
   world.update(&systems);
 }
 ```
