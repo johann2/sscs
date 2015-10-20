@@ -1,4 +1,4 @@
-# sscs
+# sscs (super-simple component system)
 Simple entity-component library inspired by [ecs-rs](https://github.com/HeroesGrave/ecs-rs) and [entityx](https://github.com/alecthomas/entityx) for Rust. I've only tested it on nightly builds, but it should work on stable, too.
 
 ###Defining features:
