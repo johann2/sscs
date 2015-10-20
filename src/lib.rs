@@ -4,7 +4,7 @@ extern crate rustc_serialize;
 macro_rules! impl_entity_data {
 {
 	$entity_type_name:ident <$global_data_name:ty> 	{
-		$($datatype:ty:$plural:ident:$mask:ident),+
+		$($datatype:ty:$plural:ident:$mask:expr),+
 	}
 }=>
 

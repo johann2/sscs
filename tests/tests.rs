@@ -2,11 +2,6 @@
 extern crate simple_ecs;
 
 use simple_ecs::{World,Entity,System,ComponentAccess};
-static POSITION_MASK:u32=1<<1;
-static SPEED_MASK:u32   =1<<2;
-static TARGET_MASK:u32  =1<<3;
-static GENERIC1_MASK:u32  =1<<4;
-static GENERIC2_MASK:u32  =1<<5;
 
 #[derive(Clone,Copy,PartialEq,PartialOrd,Default)]
 struct Vector2{x:f32,y:f32}
@@ -41,11 +36,11 @@ impl_entity_data!
 {
 	EntityData <()>
 	{
-		Speed:speeds:SPEED_MASK,
-		Position:positions:POSITION_MASK,
-		Target:targets:TARGET_MASK,
-		Generic<usize>:generic_1:GENERIC1_MASK,
-		Generic<u8>:generic_2:GENERIC2_MASK
+		Speed:speeds:1<<1,
+		Position:positions:1<<2,
+		Target:targets:1<<3,
+		Generic<usize>:generic_1:1<<4,
+		Generic<u8>:generic_2:1<<5
 	}
 }
 
@@ -176,7 +171,7 @@ impl System<EntityData,()> for TestSystem
 
 	fn get_entity_mask(&self)->u32
 	{
-		SPEED_MASK|POSITION_MASK
+		Speed::mask()|Position::mask()
 	}
 }
 

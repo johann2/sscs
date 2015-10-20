@@ -51,16 +51,12 @@ impl_entity_data!
 	{
  //		v component type
  			  //v component array name;
-		Speed:speeds:SPEED_MASK,
-		Position:positions:POSITION_MASK,
-		Character:characters:CHARACTER_MASK
+ 			  		//v component mask
+		Speed:speeds:1<<1,
+		Position:positions:1<<2,
+		Character:characters:1<<3
 	}
 }
-
-//Masks need to be defined manually, for now.
-static POSITION_MASK:u32    =1<<1;
-static SPEED_MASK:u32       =1<<2;
-static CHARACTER_MASK:u32   =1<<3;
 
 
 //Implement movementsystem
@@ -89,7 +85,7 @@ impl System<EntityData,()> for MovementSystem
 
 	fn get_entity_mask(&self)->u32
 	{
-		SPEED_MASK|POSITION_MASK
+		Speed::mask()|Position::mask()
 	}
 }
 
@@ -114,7 +110,7 @@ impl System<EntityData,()> for RenderSystem
 
 	fn get_entity_mask(&self)->u32
 	{
-		CHARACTER_MASK|POSITION_MASK
+		Character::mask()|Position::mask()
 	}
 }
 
