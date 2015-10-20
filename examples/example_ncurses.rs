@@ -3,7 +3,7 @@ extern crate simple_ecs;
 extern crate rand;
 extern crate ncurses;
 
-use simple_ecs::{System,World,Entity,Component};
+use simple_ecs::{System,World,Entity};
 use std::iter;
 use std::iter::FromIterator;
 
@@ -72,17 +72,17 @@ impl System<EntityData,()> for MovementSystem
 	{
 		for e in entities.iter()
 		{
-			let position=world.componentdata.positions[e.id].val;
-			let speed=world.componentdata.speeds[e.id].val;
-			world.componentdata.positions[e.id].val=(position.0+speed.0,position.1+speed.1);
+			let position=world.componentdata.positions[e.id()].val;
+			let speed=world.componentdata.speeds[e.id()].val;
+			world.componentdata.positions[e.id()].val=(position.0+speed.0,position.1+speed.1);
 			if position.0 < -30.0 || position.0>30.0 || position.1 < -30.0 || position.1>30.0 
 			{
 				world.delete_entity(e);
 
 				let entity=world.add_entity();
-				world.add(&entity,&Speed{val:random_vector(0.01)});
-				world.add(&entity,&Position{val:random_vector(10.0)});
-				world.add(&entity,&Character{val:'o'});
+				world.add(&entity,Speed{val:random_vector(0.01)});
+				world.add(&entity,Position{val:random_vector(10.0)});
+				world.add(&entity,Character{val:'o'});
 			}
 		}
 	}
@@ -103,8 +103,8 @@ impl System<EntityData,()> for RenderSystem
 
 		for e in entities.iter()
 		{
-			let position=world.componentdata.positions[e.id].val;
-			let character=world.componentdata.characters[e.id].val;
+			let position=world.componentdata.positions[e.id()].val;
+			let character=world.componentdata.characters[e.id()].val;
 			let x=position.0 as i32+30;
 			let y=position.1 as i32+30;
 
@@ -134,17 +134,17 @@ fn main()
 	{
 		let entity=world.add_entity();
 	
-		world.add(&entity,&Speed{val:random_vector(0.01)});
-		world.add(&entity,&Position{val:random_vector(10.0)});
-		world.add(&entity,&Character{val:'o'});
+		world.add(&entity,Speed{val:random_vector(0.01)});
+		world.add(&entity,Position{val:random_vector(10.0)});
+		world.add(&entity,Character{val:'o'});
 	}
 
 	//Add static objects
 	for _ in 0..10
 	{
 		let entity=world.add_entity();
-		world.add(&entity,&Position{val:(random_vector(15.0))});
-		world.add(&entity,&Character{val:'#'});
+		world.add(&entity,Position{val:(random_vector(15.0))});
+		world.add(&entity,Character{val:'#'});
 	}
 
 

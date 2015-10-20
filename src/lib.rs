@@ -1,37 +1,29 @@
 extern crate rustc_serialize;
-#[allow(dead_code)]
 
 #[macro_export]
-macro_rules! impl_entity_data 
+macro_rules! impl_entity_data {
 {
-{
-	$entity_type_name:ident <$global_data_name:ty>
-	{
+	$entity_type_name:ident <$global_data_name:ty> 	{
 		$($datatype:ty:$plural:ident:$mask:ident),+
 	}
 }=>
 
 {
-	pub struct $entity_type_name
-	{
+	pub struct $entity_type_name {
 		$(
 		pub $plural:Vec<$datatype>,
 		)+
 	}
 
-	impl $crate::Components for $entity_type_name
-	{
-		fn new()->$entity_type_name
-		{
-			$entity_type_name
-			{
+	impl $crate::Components for $entity_type_name {
+		fn new()->$entity_type_name {
+			$entity_type_name {
 				$(
 				$plural:Vec::new(),
 				)+
 			}
 		}
-		fn extend(&mut self)
-		{
+		fn extend(&mut self) {
 			$(
 			self.$plural.push(Default::default());
 			)+
@@ -39,82 +31,17 @@ macro_rules! impl_entity_data
 	}
 
 	$(
-	impl $crate::Component<$datatype> for $crate::World<$entity_type_name,$global_data_name>
-	{
-		fn has(&self,entity:&$crate::Entity)->bool
-		{
-			if self.entity_valid(&entity)
-			{
-				self.components[entity.id]&$mask!=0
-			}
-			else
-			{
-				panic!("Attempt to query an invalid entity");
-			}
+	impl $crate::ComponentAccess<$entity_type_name> for $datatype {
+		fn mask()->u32 {
+			$mask
 		}
 
-		fn get<'a>(&'a self,entity:&$crate::Entity)->Option<&'a $datatype>
-		{
-			if self.entity_valid(&entity)
-			{
-				if self.components[entity.id]&$mask!=0
-				{
-					Some(&self.componentdata.$plural[entity.id])
-				}
-				else 
-				{
-					None
-				}
-			}
-			else
-			{
-				panic!("Attempt to query an invalid entity");
-			}
+		fn get_data(comps:&$entity_type_name)->&Vec<$datatype> {
+			&comps.$plural
 		}
 
-		fn get_mut<'a>(&'a mut self,entity:&$crate::Entity)->Option<&'a mut $datatype>
-		{
-			if self.entity_valid(&entity)
-			{
-				if self.components[entity.id]&$mask!=0
-				{
-					Some(&mut self.componentdata.$plural[entity.id])
-				}
-				else 
-				{
-					None
-				}
-			}
-			else
-			{
-				panic!("Attempt to query an invalid entity");
-			}
-		}
-
-
-		fn add(&mut self,entity:&$crate::Entity,comp:&$datatype)
-		{
-			if self.entity_valid(&entity)
-			{
-				self.componentdata.$plural[entity.id]=comp.clone();
-				self.components[entity.id]|=$mask;
-			}
-			else
-			{
-				panic!("Attempt to add a component to invalid entity!");
-			}
-		}
-
-		fn remove(&mut self,entity:&$crate::Entity)
-		{
-			if self.entity_valid(&entity)
-			{
-				self.components[entity.id]^=$mask;
-			}
-			else
-			{
-				panic!("Attempt to remove a component from invalid entity!");
-			}
+		fn get_data_mut(comps:&mut $entity_type_name)->&mut Vec<$datatype> {
+			&mut comps.$plural
 		}
 	}
 	)+
@@ -123,72 +50,69 @@ macro_rules! impl_entity_data
 
 #[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable,Default,Hash)]
 /// The entity id struct. 
-pub struct Entity
-{
-	///Use this to index `World::componentdata` fields
-	pub id:usize,
+pub struct Entity {
+	id:usize,
 	version:usize
 }
 
+impl Entity {
+	///Use this to index `World::componentdata` fields
+	pub fn id(&self)->usize {
+		self.id
+	}
+}
+
 ///This struct holds everything related to entity-component system.
-pub struct World<T,C>
-{
-	pub entities:Vec<Entity>,
+pub struct World<T,C> {
+	entities:Vec<Entity>,
 	pub componentdata:T,
 	pub globaldata:C,
 	recycled_ids:Vec<Entity>,
 	entities_to_delete:Vec<Entity>,
-	pub components:Vec<u32>,
+	components:Vec<u32>,
 	next_id:usize,
 
 }
 
 ///Trait for systems
-pub trait System<T,C>
-{
+pub trait System<T,C> {
 	fn process(&mut self,entities:Vec<Entity>,world:&mut World<T,C>);
-	fn get_entity_mask(&self)->u32;
+	fn get_entity_mask(&self) -> u32;
 	
 }
 
 ///Internal trait for World::componentdata
-pub trait Components
-{
-	fn new()->Self;
+pub trait Components {
+	fn new() -> Self;
 	fn extend(&mut self);
 }
 
 ///Trait for data not directly associated with entities
-pub trait GlobalData
-{
-	fn new()->Self;
+pub trait GlobalData {
+	fn new() -> Self;
 }
 
-impl GlobalData for ()
-{
-	fn new()->()
+impl GlobalData for () {
+	fn new() -> ()
 	{()}
 }
 
-///Trait for component access
-pub trait Component<T>
-{
-	fn has(&self,entity:&Entity)->bool;
-	fn get(&self,entity:&Entity)->Option<&T>;
-	fn get_mut(&mut self,entity:&Entity)->Option<&mut T>;
-	fn add(&mut self,entity:&Entity,comp:&T);
-	fn remove(&mut self,entity:&Entity);
+///Trait for components access
+pub trait ComponentAccess<T>:Sized {
+	///Returns the mask used to check component ownership
+	fn mask() -> u32;
+	///Returns a reference to the vector holding all components of this type
+	fn get_data(comps:&T) -> &Vec<Self>;
+	///Returns a mutable reference to the vector holding all components of this type
+	fn get_data_mut(comps:&mut T) -> &mut Vec<Self>;
 }
 
 
 
-impl<T:Components,C:GlobalData> World<T,C>
-{
+impl<T:Components,C:GlobalData> World<T,C> {
 	///Creates a new `World`
-	pub fn new()->World<T,C>
-	{
-		World
-		{
+	pub fn new()->World<T,C> {
+		World {
 			componentdata:T::new(),
 			globaldata:C::new(),
 			entities:Vec::new(),
@@ -199,23 +123,19 @@ impl<T:Components,C:GlobalData> World<T,C>
 		}
 	}
 	///Adds a new entity
-	pub fn add_entity(&mut self)->Entity
-	{
+	pub fn add_entity(&mut self) -> Entity {
 		let entity=self.recycled_ids.pop();
 
-		match entity
-		{
-			Some(e) =>
-			{
-				self.entities[e.id].version+=1;
+		match entity {
+			Some(e) => {
+				self.entities[e.id].version += 1;
 				self.entities[e.id];
-				self.components[e.id]=1;
+				self.components[e.id] = 1;
 				self.entities[e.id]
 			}
-			None    => 
-			{
+			None    => {
 				let en=Entity{id:self.next_id,version:0};
-				self.next_id+=1;
+				self.next_id += 1;
 				self.entities.push(en);
 				self.components.push(1);
 				self.componentdata.extend();
@@ -225,42 +145,85 @@ impl<T:Components,C:GlobalData> World<T,C>
 	}
 	///Marks an entity for deletion.
 	///The entity gets actually deleted the next time you call `update`
-	pub fn delete_entity(&mut self,e:&Entity)
-	{
+	pub fn delete_entity(&mut self,e:&Entity) {
 		self.entities_to_delete.push(*e);
 	}
 
 	///Checks if entity actually exists.
 	///Deleted entities also fail this check.
-	pub fn entity_valid(&self,e:&Entity)->bool
-	{
-		self.components[e.id]!=0 && self.entities[e.id].version==e.version
+	pub fn entity_valid(&self,e:&Entity) -> bool {
+		self.components[e.id] != 0 && self.entities[e.id].version == e.version
 	}
 
-	pub fn entities_with_components(&self,mask:u32)->Vec<Entity>
-	{
-		self.entities.iter().filter(|&e| self.components[e.id]&mask==mask).map(|x|*x).collect::<Vec<Entity>>()
+	///Returns all entities that have at least the components specified by `mask`
+	pub fn entities_with_components(&self,mask:u32) -> Vec<Entity> {
+		let mask2 = mask|1;
+		self.entities.iter().filter(|&e| self.components[e.id]&mask2 == mask2).map(|x| *x).collect::<Vec<Entity>>()
 	}
 
-	///Removes entities and runs systems.
-	pub fn update(&mut self,systems:&mut Vec<Box<System<T,C>>>) 
-	{
-		for e in self.entities_to_delete.iter()
-		{
-			if self.entity_valid(e)
-			{
-				self.components[e.id]=0;
+	///Returns all valid entities
+	pub fn entities(&self) -> Vec<Entity> {
+		self.entities_with_components(0)
+	}
+
+
+	///Checks if `entity` has a component of type `Z`
+	pub fn has<Z>(&self,entity:&Entity) -> bool 
+	where Z:ComponentAccess<T> {
+		assert!(self.entity_valid(&entity));
+		self.components[entity.id]&Z::mask() != 0
+	}
+
+	///Returns a reference to component `Z` attached to `entity
+	pub fn get<Z>(&self,entity:&Entity) -> Option<&Z> 
+	where Z:ComponentAccess<T> {
+		assert!(self.entity_valid(&entity));
+		if self.has::<Z>(entity) {
+			Some(&Z::get_data(&self.componentdata)[entity.id])
+		}
+		else {None}
+	}
+
+	///Returns a mutable reference to component `Z` attached to `entity`
+	pub fn get_mut<Z>(&mut self,entity:&Entity) -> Option<&mut Z> 
+	where Z:ComponentAccess<T> {
+		assert!(self.entity_valid(&entity));
+		if self.has::<Z>(entity) {
+			Some(&mut Z::get_data_mut(&mut self.componentdata)[entity.id])
+		}
+		else {None}
+	}
+
+	///Adds a component of type `Z` to `entity`
+	pub fn add<Z>(&mut self,entity:&Entity,comp:Z) 
+	where Z:ComponentAccess<T> {
+		assert!(self.entity_valid(&entity));
+		Z::get_data_mut(&mut self.componentdata)[entity.id] = comp;
+		self.components[entity.id] |= Z::mask();
+	}
+
+	///Removes a component of type `Z` from `entity`
+	pub fn remove<Z>(&mut self,entity:&Entity) 
+	where Z:ComponentAccess<T> {
+		assert!(self.entity_valid(&entity));
+		self.components[entity.id] ^= Z::mask();
+	}
+
+
+	///Removes entities marked for deletion and runs systems.
+	pub fn update(&mut self,systems:&mut Vec<Box<System<T,C>>>) {
+		for e in self.entities_to_delete.iter()	{
+			if self.entity_valid(e) {
+				self.components[e.id] = 0;
 				self.recycled_ids.push(self.entities[e.id]);
 			}
 		}
 
-		for system in systems.iter_mut()
-		{
-			let mask=system.get_entity_mask();
-			let entitylist=self.entities_with_components(mask);
+		for system in systems.iter_mut() {
+			let mask = system.get_entity_mask();
+			let entitylist = self.entities_with_components(mask);
 			system.process(entitylist,self);
 		}
-
 	}
 }
 

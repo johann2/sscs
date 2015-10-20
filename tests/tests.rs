@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate simple_ecs;
 
-use simple_ecs::{World,Component,Entity,System};
+use simple_ecs::{World,Entity,System,ComponentAccess};
 static POSITION_MASK:u32=1<<1;
 static SPEED_MASK:u32   =1<<2;
 static TARGET_MASK:u32  =1<<3;
@@ -104,9 +104,9 @@ fn component_add()
 	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 
-	assert!(!Component::<Speed>::has(&ecs,&entity1));
-	ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
-	assert!(Component::<Speed>::has(&ecs,&entity1));
+	assert!(!ecs.has::<Speed>(&entity1));
+	ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
+	assert!(ecs.has::<Speed>(&entity1));
 	ecs.update(&mut systems);
 
 }
@@ -119,22 +119,22 @@ fn component_remove()
 	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
 
-	assert!(!Component::<Speed>::has(&ecs,&entity1));
-	assert!(!Component::<Position>::has(&ecs,&entity1));
+	assert!(!ecs.has::<Speed>(&entity1));
+	assert!(!ecs.has::<Position>(&entity1));
 	
-	ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
 	
-	assert!(Component::<Speed>::has(&ecs,&entity1));
-	assert!(!Component::<Position>::has(&ecs,&entity1));
+	assert!(ecs.has::<Speed>(&entity1));
+	assert!(!ecs.has::<Position>(&entity1));
 	
-	ecs.add(&entity1,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity1,Position{val:Vector2{x:0.0,y:1.0}});
 	
-	assert!(Component::<Speed>::has(&ecs,&entity1));
-	assert!(Component::<Position>::has(&ecs,&entity1));
+	assert!(ecs.has::<Speed>(&entity1));
+	assert!(ecs.has::<Position>(&entity1));
 
-	Component::<Speed>::remove(&mut ecs,&entity1);
-	assert!(!Component::<Speed>::has(&ecs,&entity1));
-	assert!(Component::<Position>::has(&ecs,&entity1));
+	ecs.remove::<Speed>(&entity1);
+	assert!(!ecs.has::<Speed>(&entity1));
+	assert!(ecs.has::<Position>(&entity1));
 	ecs.update(&mut systems);
 }
 
@@ -144,15 +144,15 @@ fn component_remove_with_entity()
 	let mut ecs:World<EntityData,()>=World::new();
 	let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 	let entity1=ecs.add_entity();
-	ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity1,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity1,Position{val:Vector2{x:0.0,y:1.0}});
 	ecs.update(&mut systems);
 	ecs.delete_entity(&entity1);
 
 
 	let entity2=ecs.add_entity();
-	assert!(!Component::<Speed>::has(&ecs,&entity2));
-	assert!(!Component::<Position>::has(&ecs,&entity2));
+	assert!(!ecs.has::<Speed>(&entity2));
+	assert!(!ecs.has::<Position>(&entity2));
 	ecs.update(&mut systems);
 
 }
@@ -167,8 +167,8 @@ impl System<EntityData,()> for TestSystem
 		let mut count=0;
 		for e in entities.iter()
 		{
-			assert!(Component::<Speed>::has(world,&e));
-			assert!(Component::<Position>::has(world,&e));
+			assert!(world.has::<Speed>(&e));
+			assert!(world.has::<Position>(&e));
 			count+=1;
 		}
 		assert_eq!(count,5);
@@ -191,14 +191,14 @@ impl System<EntityData,()> for TestSystem2
 		{
 			world.delete_entity(e);
 			let entity=world.add_entity();
-			world.add(&entity,&Target{val:None});
+			world.add(&entity,Target{val:None});
 			break;
 		}
 	}
 
 	fn get_entity_mask(&self)->u32
 	{
-		SPEED_MASK|POSITION_MASK
+		Speed::mask()|Position::mask()
 	}
 }
 
@@ -213,7 +213,7 @@ impl System<EntityData,()> for MutableTestSystem
 	{
 		for e in interested.iter()
 		{
-			let mut position:&mut Position=Component::get_mut(world,e).unwrap();
+			let mut position:&mut Position=world.get_mut(e).unwrap();
 			position.val.x=self.val;
 			position.val.y=self.val;
 		}
@@ -222,7 +222,7 @@ impl System<EntityData,()> for MutableTestSystem
 
 	fn get_entity_mask(&self)->u32
 	{
-		POSITION_MASK
+		Position::mask()
 	}
 }
 
@@ -236,28 +236,28 @@ fn system_filter()
 	for _ in 0..4
 	{
 		let entity1=ecs.add_entity();
-		ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
-		ecs.add(&entity1,&Position{val:Vector2{x:0.0,y:1.0}});
+		ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
+		ecs.add(&entity1,Position{val:Vector2{x:0.0,y:1.0}});
 		ecs.add_entity();
 	}
 
 	let entity2=ecs.add_entity();
-	ecs.add(&entity2,&Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity2,Speed{val:Vector2{x:0.0,y:1.0}});
 
 	let entity3=ecs.add_entity();
-	ecs.add(&entity3,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity3,Position{val:Vector2{x:0.0,y:1.0}});
 
 	let entity4=ecs.add_entity();
-	ecs.add(&entity4,&Position{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity4,&Target{val:None});
+	ecs.add(&entity4,Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity4,Target{val:None});
 
 	let entity5=ecs.add_entity();
-	ecs.add(&entity5,&Target{val:None});
+	ecs.add(&entity5,Target{val:None});
 
 	let entity6=ecs.add_entity();
-	ecs.add(&entity6,&Target{val:None});
-	ecs.add(&entity6,&Speed{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity6,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity6,Target{val:None});
+	ecs.add(&entity6,Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity6,Position{val:Vector2{x:0.0,y:1.0}});
 
 	ecs.update(&mut systems);
 	ecs.update(&mut systems);
@@ -273,40 +273,40 @@ fn system_add_remove_entities()
 	for _ in 0..4
 	{
 		let entity1=ecs.add_entity();
-		ecs.add(&entity1,&Speed{val:Vector2{x:0.0,y:1.0}});
-		ecs.add(&entity1,&Position{val:Vector2{x:0.0,y:1.0}});
+		ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
+		ecs.add(&entity1,Position{val:Vector2{x:0.0,y:1.0}});
 		ecs.add_entity();
 	}
 
 	let entity2=ecs.add_entity();
-	ecs.add(&entity2,&Speed{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity2,&Generic::<usize>{val:10});
+	ecs.add(&entity2,Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity2,Generic::<usize>{val:10});
 
 	let entity3=ecs.add_entity();
-	ecs.add(&entity3,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity3,Position{val:Vector2{x:0.0,y:1.0}});
 
 	let entity4=ecs.add_entity();
-	ecs.add(&entity4,&Position{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity4,&Target{val:None});
+	ecs.add(&entity4,Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity4,Target{val:None});
 
 	let entity5=ecs.add_entity();
-	ecs.add(&entity5,&Target{val:None});
+	ecs.add(&entity5,Target{val:None});
 
 	let entity6=ecs.add_entity();
-	ecs.add(&entity6,&Target{val:None});
-	ecs.add(&entity6,&Speed{val:Vector2{x:0.0,y:1.0}});
-	ecs.add(&entity6,&Position{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity6,Target{val:None});
+	ecs.add(&entity6,Speed{val:Vector2{x:0.0,y:1.0}});
+	ecs.add(&entity6,Position{val:Vector2{x:0.0,y:1.0}});
 
 	for _ in 0..12
 	{
 		ecs.update(&mut systems);
 	}
 
-	for e in ecs.entities.iter()
+	for e in ecs.entities().iter()
 	{
 		if ecs.entity_valid(&e)
 		{
-			let success=!Component::<Position>::has(&ecs,&e) || !Component::<Speed>::has(&ecs,&e);
+			let success=!ecs.has::<Position>(&e) || !ecs.has::<Speed>(&e);
 			assert!(success);
 		}
 	}
@@ -322,7 +322,7 @@ fn mutable_system()
 	for _ in 0..10
 	{
 		let entity=ecs.add_entity();
-		ecs.add(&entity,&Position{val:Vector2{x:0.0,y:1.0}});
+		ecs.add(&entity,Position{val:Vector2{x:0.0,y:1.0}});
 	}
 
 	for _ in 0..12
@@ -330,11 +330,11 @@ fn mutable_system()
 		ecs.update(&mut systems);
 	}
 
-	for e in ecs.entities.iter()
+	for e in ecs.entities().iter()
 	{
 		if ecs.entity_valid(&e)
 		{
-			let success=if let Some(pos)=Component::<Position>::get(&ecs,&e) {
+			let success=if let Some(pos)=ecs.get::<Position>(&e) {
 				println!("{:?},{:?},",pos.val.x,pos.val.y);
 				pos.val.x==11.0 && pos.val.y==11.0
 			} else {false};
