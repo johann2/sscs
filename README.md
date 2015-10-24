@@ -13,12 +13,12 @@ There's a working example in the examples folder, if something is too confusing 
 ###Importing
 Add to cargo.toml:
 ```
-[dependencies.simple_ecs]
+[dependencies.sscs]
 git = "https://github.com/johann2/sscs.git"
 ```
 
 Add to your crate root:
-`extern crate simple_ecs`
+`extern crate sscs`
 
 ###Defining your components
 Components must implement `Default` and every component type must have an unique name
@@ -52,29 +52,29 @@ The type argument, in this example `()` is for a struct that holds data not dire
 
 
 ```rust
-let mut ecs:World<EntityData,()>=World::new(); //Create a new world
+let mut world:World<EntityData,()>=World::new(); //Create a new world
 
 //manipulating entities:
-let entity=ecs.add_entity();                  //Create a new entity
-assert!(ecs.entity_valid(&entity);            //Check if an entity is valid
-ecs.remove_entity(&entity);                   //Remove an entity.
+let entity=world.add_entity();                  //Create a new entity
+assert!(world.entity_valid(&entity);            //Check if an entity is valid
+world.remove_entity(&entity);                   //Remove an entity.
 
 //Checking if an entity is valid is important, because the following functions will panic if it isn't:
 //(let's assume `entity` didn't get deleted yet)
 
-ecs.add(&entity,Position{val:(10.0,0.0)});   //Add a new Position component
-ecs.add(&entity,Speed{val:(0.0,0.0)});       //          Speed
+world.add(&entity,Position{val:(10.0,0.0)});   //Add a new Position component
+world.add(&entity,Speed{val:(0.0,0.0)});       //          Speed
 
 //If a component exists, `add` overwrites it. An entity can only have one of every type of component.
 
 //get an optional reference to a component:
-let position=ecs.get::<Position>(&entity); 
+let position=world.get::<Position>(&entity);
 
 //check if an entity has a component
-assert!(ecs.has::<Speed>(&entity)); 
+assert!(world.has::<Speed>(&entity));
 
 //Remove a component
-ecs.remove::<Speed>(&entity);
+world.remove::<Speed>(&entity);
 
 ```
 
@@ -89,8 +89,8 @@ impl System<EntityData,()> for MovementSystem
 	//processing function, recieves a list of entities that match the bitmask returned by get_entity_mask
 	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)	{
 		for e in entities.iter() {
-			//world.componentdata.{field name}[entity.id] is a faster way to access components, 
-			//but really unsafe.	
+			//world.componentdata.{field name}[entity.id] is a faster way to access components,
+			//but really unsafe.
 			let position=world.componentdata.positions[e.id].val;
 			let speed=world.componentdata.speeds[e.id].val;
 			world.componentdata.positions[e.id].val=(position.0+speed.0,position.1+speed.1);
@@ -108,7 +108,7 @@ impl System<EntityData,()> for MovementSystem
 
 ```rust
 
-let mut ecs:World<EntityData,()>=World::new();
+let mut sscs:World<EntityData,()>=World::new();
 //Systems are stored as boxed trait objects in a vector.
 let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
 //Adding a system:
