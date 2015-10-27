@@ -1,4 +1,5 @@
 extern crate rustc_serialize;
+use std::mem;
 
 #[macro_export]
 macro_rules! impl_entity_data {
@@ -48,7 +49,7 @@ macro_rules! impl_entity_data {
 }
 }
 
-#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable,Default,Hash)]
+#[derive(Clone,Copy,PartialEq,Eq,Ord,PartialOrd,RustcEncodable,RustcDecodable,Default,Hash,Debug)]
 /// The entity id struct. 
 pub struct Entity {
 	id:usize,
@@ -71,14 +72,21 @@ pub struct World<T,C> {
 	entities_to_delete:Vec<Entity>,
 	components:Vec<u32>,
 	next_id:usize,
-
+	added:Vec<(u32,Entity)>,
+	removed:Vec<(u32,Entity)>
 }
 
 ///Trait for systems
 pub trait System<T,C> {
+	///Function that recieves all the entities that have the components specified by `get_entity_mask`.
 	fn process(&mut self,entities:Vec<Entity>,world:&mut World<T,C>);
 	fn get_entity_mask(&self) -> u32;
-	
+	///Function for processing all the entities that got added to this system last frame.
+	///Entities added/removed here will get deleted next frame.
+	fn process_added(&mut self,entities:Vec<Entity>,world:&mut World<T,C>) {}
+	///Function for processing all the entities that got removed from this system last frame.
+	///Entities added/removed here will get deleted next frame.
+	fn process_removed(&mut self,entities:Vec<Entity>,world:&mut World<T,C>) {}
 }
 
 ///Internal trait for World::componentdata
@@ -120,6 +128,8 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			entities_to_delete:Vec::new(),
 			components:Vec::new(),
 			next_id:0,
+			added:Vec::new(),
+			removed:Vec::new(),
 		}
 	}
 	///Adds a new entity
@@ -146,6 +156,8 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	///Marks an entity for deletion.
 	///The entity gets actually deleted the next time you call `update`
 	pub fn delete_entity(&mut self,e:&Entity) {
+		assert!(self.entity_valid(&e));
+		self.removed.push((0xFFFFFFFF,*e));
 		self.entities_to_delete.push(*e);
 	}
 
@@ -195,23 +207,31 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	}
 
 	///Adds a component of type `Z` to `entity`
+	///If entity already has component of this type, it gets overwritten.
 	pub fn add<Z>(&mut self,entity:&Entity,comp:Z) 
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
 		Z::get_data_mut(&mut self.componentdata)[entity.id] = comp;
+		if self.components[entity.id] & Z::mask() == 0 {
+			self.added.push((Z::mask(),*entity));
+		}
 		self.components[entity.id] |= Z::mask();
 	}
 
 	///Removes a component of type `Z` from `entity`
+	///If entity doesn't own component `Z`, this function does nothing.
 	pub fn remove<Z>(&mut self,entity:&Entity) 
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
-		self.components[entity.id] ^= Z::mask();
+		if self.components[entity.id] & Z::mask() != 0 {
+			self.removed.push((Z::mask(),*entity));
+			self.components[entity.id] ^= Z::mask();
+		}
 	}
 
 
 	///Removes entities marked for deletion and runs systems.
-	pub fn update(&mut self,systems:&mut Vec<Box<System<T,C>>>) {
+	pub fn update(&mut self,systems:&mut Vec<&mut System<T,C>>) {
 		for e in self.entities_to_delete.iter()	{
 			if self.entity_valid(e) {
 				self.components[e.id] = 0;
@@ -219,11 +239,43 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			}
 		}
 
+		//Process
 		for system in systems.iter_mut() {
 			let mask = system.get_entity_mask();
 			let entitylist = self.entities_with_components(mask);
 			system.process(entitylist,self);
 		}
+
+		let removed_entities=mem::replace(&mut self.removed,Vec::new());
+		let added_entities=mem::replace(&mut self.added,Vec::new());
+
+		for system in systems.iter_mut() {
+			let sys_mask = system.get_entity_mask();
+
+			let mut added_important_entities:Vec<_>=added_entities.iter()
+				.filter(|&&(mask,e)| sys_mask&mask!=0 )
+				.map(|&(_,entity)| entity)
+				.collect();
+			added_important_entities.sort();
+			added_important_entities.dedup();
+
+			system.process_added(added_important_entities,self);
+		}
+
+		for system in systems.iter_mut() {
+			let sys_mask = system.get_entity_mask();
+
+			let mut removed_important_entities:Vec<_>=removed_entities.iter()
+				.filter(|&&(mask,e)| sys_mask&mask!=0 )
+				.map(|&(_,entity)| entity)
+				.collect();
+
+			removed_important_entities.sort();
+			removed_important_entities.dedup();
+			system.process_removed(removed_important_entities,self);
+		}
+
+
 	}
 }
 
