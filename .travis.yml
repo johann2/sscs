@@ -5,6 +5,10 @@ rust:
 - beta
 - stable
 
+matrix:
+  allow_failures:
+    - rust: nightly
+
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
@@ -27,3 +31,6 @@ after_success:
 notifications:
   email:
     on_success: never
+env:
+  global:
+    secure: pZgUgfIBOhaS9CuvV/tXTC7D8ffwkwLNB1VIcjvuKK0xm+LjOfAEJFe7rpcR4ZCOSNQZClmBnWCQ15RaSymlm3jsujAiIPxNGvDxOEAt0HLX7Zou1k38oztLx0MCrhvpqUnfkUwZiF4WqYFyHszfZbLe9RO1UUR3wG3eSwDmjEvryzHRXP0Bti22V2XhK39BItpWg1QvO1T+Rx9EUn0rS0XtdpczYJcUkHgeWjxoHQMQuCBocrwgaBy9jLG7pcSZ7lvuqUMi8BgHPclj+0An6bBaeV4NDycWXDGZsAK3Cj2KpOZICz/7P2OCiPBYOUI0qBKOX/yp7Mx2b2b0s7dLhHOntCsuwS57L/MaHBma/qBRT7gikV+xOfExCRJV+g+LQ4H3KHVSQBElDpmYtPr2U8FqT/DI7KkTlimH22KuQ/7+Xl+dTKbXCH3wxYm2TX4t6FEVgwJvKHJ4VhLn2OZyw3O4qfvhlUh+m146w/lXV8bPEZREunxGkCC6zLWtGiedVS+t3bKkbgjsK0Q94kAEqmXTYhv+OOK1lrEHHWsbAk+mBninSPaMJmTplffZ1ie8P84Iq8mZ9EDSXEqqMBO9rIapqYoe132He+qiSmXjT1c+AgYF7VctHq4/xCRVmRMB1js3ly14fyV938baGzRA2om/96BW57Bqwye67qlH2fg=
