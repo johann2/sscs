@@ -39,20 +39,23 @@ The last column, bitmask has to be a power of two and unique for every component
 For components defined above, it would look like this:
 ```rust
 impl_entity_data! {
-	EntityData <()>	{
+	EntityData {
 		//Class name	:database field name	:bitmask
 		Speed		:speeds			:1<<1,
 		Position	:positions		:1<<2,
 	}
 }
 ```
-The type argument, in this example `()` is for a struct that holds data not directly related to any entity, like level geometry.
 
 ### Manipulating entities
 
 
 ```rust
-let mut world:World<EntityData,()>=World::new(); //Create a new world
+
+//Let's define a type alias to keep examples clean.
+type ExampleWorld=World<EntityData,()>;
+
+let mut world=ExampleWorld::new(); 				//Create a new world
 
 //manipulating entities:
 let entity=world.add_entity();                  //Create a new entity
@@ -65,7 +68,7 @@ world.remove_entity(&entity);                   //Remove an entity.
 world.add(&entity,Position{val:(10.0,0.0)});   //Add a new Position component
 world.add(&entity,Speed{val:(0.0,0.0)});       //          Speed
 
-//If a component exists, `add` overwrites it. An entity can only have one of every type of component.
+//If a component exists, `add` overwrites it. An entity can have only one of every type of component.
 
 //get an optional reference to a component:
 let position=world.get::<Position>(&entity);
@@ -84,23 +87,37 @@ Systems need to implement the `System` trait. Systems aren't serializable, so th
 ```rust
 struct MovementSystem;
 
-impl System<EntityData,()> for MovementSystem
+impl System<ExampleWorld> for MovementSystem
 {
-	//processing function, recieves a list of entities that match the bitmask returned by get_entity_mask
-	fn process(&self,entities:Vec<Entity>,world:&mut World<EntityData,()>)	{
+	fn process(&self,entities:Vec<Entity>,world:&mut ExampleWorld)	{
 		for e in entities.iter() {
-			//world.componentdata.{field name}[entity.id] is a faster way to access components,
+			//world.component_data.{field name}[entity.id] is a faster way to access components,
 			//but really unsafe.
-			let position=world.componentdata.positions[e.id].val;
-			let speed=world.componentdata.speeds[e.id].val;
-			world.componentdata.positions[e.id].val=(position.0+speed.0,position.1+speed.1);
+			let position=world.component_data.positions[e.id].val;
+			let speed=world.component_data.speeds[e.id].val;
+			world.component_data.positions[e.id].val=(position.0+speed.0,position.1+speed.1);
 			//you can also delete and create components and entities here without any problems
 		}
 	}
 
-	fn get_entity_mask(&self,world:&mut World<EntityData,()>)->Vec<Entity>	{
+	fn get_entity_mask()->u32	{
 		Speed::mask()|Position::mask()
 	}
+
+	//Optionally, you can also implement functions that deal with added and removed entities
+
+	fn process_added(&mut self,entities:Vec<Entity>,world:&mut ExampleWorld) {
+		for e in entities.iter() {
+			println("Added:{:?}",e);
+		}
+	}
+
+	fn process_removed(&mut self,entities:Vec<Entity>,world:&mut ExampleWorld) {
+		for e in entities.iter() {
+			println("Removed:{:?}",e);
+		}
+	}
+
 }
 ```
 
@@ -108,11 +125,13 @@ impl System<EntityData,()> for MovementSystem
 
 ```rust
 
-let mut sscs:World<EntityData,()>=World::new();
-//Systems are stored as boxed trait objects in a vector.
-let mut systems:Vec<Box<System<EntityData,()>>>=Vec::new();
-//Adding a system:
-systems.push(Box::new(MovementSystem));
+let mut sscs=ExampleWorld::new();
+//Systems are stored as mutable trait objects in a vector.
+//You are responsible for storing systems.
+let mut movement_system=MovementSystem;
+
+let mut systems:Vec<&mut System<ExampleWorld>>=Vec::new();
+systems.push(&mut movement_system as &mut System<ExampleWorld>);
 
 //Add/setup entities (see above)
 ...

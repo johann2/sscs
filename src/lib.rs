@@ -4,7 +4,7 @@ use std::mem;
 #[macro_export]
 macro_rules! impl_entity_data {
 {
-	$entity_type_name:ident <$global_data_name:ty> 	{
+	$entity_type_name:ident {
 		$($datatype:ty:$plural:ident:$mask:expr),+
 	}
 }=>
@@ -57,7 +57,7 @@ pub struct Entity {
 }
 
 impl Entity {
-	///Use this to index `World::componentdata` fields
+	///Use this to index `World::component_data` fields
 	pub fn id(&self)->usize {
 		self.id
 	}
@@ -66,8 +66,10 @@ impl Entity {
 ///This struct holds everything related to entity-component system.
 pub struct World<T,C> {
 	entities:Vec<Entity>,
-	pub componentdata:T,
-	pub globaldata:C,
+	///Holds all the components attached to entities.
+	pub component_data:T,
+	///Holds all data that isn't related to any entit.y
+	pub global_data:C,
 	recycled_ids:Vec<Entity>,
 	entities_to_delete:Vec<Entity>,
 	components:Vec<u32>,
@@ -77,19 +79,22 @@ pub struct World<T,C> {
 }
 
 ///Trait for systems
-pub trait System<T,C> {
-	///Function that recieves all the entities that have the components specified by `get_entity_mask`.
-	fn process(&mut self,entities:Vec<Entity>,world:&mut World<T,C>);
+pub trait System<W> {
+	///Function that processes all the entities that have the components specified by `get_entity_mask`.
+	fn process(&mut self,entities:Vec<Entity>,world:&mut W);
+
+	///Returns a bitmask that represents the minimum combination of components an entity needs to have in order to be processed by this system
+	///Needs to be constant
 	fn get_entity_mask(&self) -> u32;
 	///Function for processing all the entities that got added to this system last frame.
 	///Entities added/removed here will get deleted next frame.
-	fn process_added(&mut self,entities:Vec<Entity>,world:&mut World<T,C>) {}
+	fn process_added(&mut self,_:Vec<Entity>,_:&mut W) {}
 	///Function for processing all the entities that got removed from this system last frame.
 	///Entities added/removed here will get deleted next frame.
-	fn process_removed(&mut self,entities:Vec<Entity>,world:&mut World<T,C>) {}
+	fn process_removed(&mut self,_:Vec<Entity>,_:&mut W) {}
 }
 
-///Internal trait for World::componentdata
+///Internal trait for World::component_data
 pub trait Components {
 	fn new() -> Self;
 	fn extend(&mut self);
@@ -121,8 +126,8 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	///Creates a new `World`
 	pub fn new()->World<T,C> {
 		World {
-			componentdata:T::new(),
-			globaldata:C::new(),
+			component_data:T::new(),
+			global_data:C::new(),
 			entities:Vec::new(),
 			recycled_ids:Vec::new(),
 			entities_to_delete:Vec::new(),
@@ -132,7 +137,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			removed:Vec::new(),
 		}
 	}
-	///Adds a new entity
+	///Adds a new entity with no components
 	pub fn add_entity(&mut self) -> Entity {
 		let entity=self.recycled_ids.pop();
 
@@ -148,7 +153,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 				self.next_id += 1;
 				self.entities.push(en);
 				self.components.push(1);
-				self.componentdata.extend();
+				self.component_data.extend();
 				en
 			}
 		}
@@ -161,8 +166,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 		self.entities_to_delete.push(*e);
 	}
 
-	///Checks if entity actually exists.
-	///Deleted entities also fail this check.
+	///Check if an entity actually exists.
 	pub fn entity_valid(&self,e:&Entity) -> bool {
 		self.components[e.id] != 0 && self.entities[e.id].version == e.version
 	}
@@ -191,7 +195,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
 		if self.has::<Z>(entity) {
-			Some(&Z::get_data(&self.componentdata)[entity.id])
+			Some(&Z::get_data(&self.component_data)[entity.id])
 		}
 		else {None}
 	}
@@ -201,7 +205,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
 		if self.has::<Z>(entity) {
-			Some(&mut Z::get_data_mut(&mut self.componentdata)[entity.id])
+			Some(&mut Z::get_data_mut(&mut self.component_data)[entity.id])
 		}
 		else {None}
 	}
@@ -211,7 +215,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 	pub fn add<Z>(&mut self,entity:&Entity,comp:Z) 
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
-		Z::get_data_mut(&mut self.componentdata)[entity.id] = comp;
+		Z::get_data_mut(&mut self.component_data)[entity.id] = comp;
 		if self.components[entity.id] & Z::mask() == 0 {
 			self.added.push((Z::mask(),*entity));
 		}
@@ -231,7 +235,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 
 
 	///Removes entities marked for deletion and runs systems.
-	pub fn update(&mut self,systems:&mut Vec<&mut System<T,C>>) {
+	pub fn update(&mut self,systems:&mut Vec<&mut System<Self>>) {
 		for e in self.entities_to_delete.iter()	{
 			if self.entity_valid(e) {
 				self.components[e.id] = 0;
@@ -253,7 +257,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			let sys_mask = system.get_entity_mask();
 
 			let mut added_important_entities:Vec<_>=added_entities.iter()
-				.filter(|&&(mask,e)| sys_mask&mask!=0 )
+				.filter(|&&(mask,_)| sys_mask&mask!=0 )
 				.map(|&(_,entity)| entity)
 				.collect();
 			added_important_entities.sort();
@@ -266,7 +270,7 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			let sys_mask = system.get_entity_mask();
 
 			let mut removed_important_entities:Vec<_>=removed_entities.iter()
-				.filter(|&&(mask,e)| sys_mask&mask!=0 )
+				.filter(|&&(mask,_)| sys_mask&mask!=0 )
 				.map(|&(_,entity)| entity)
 				.collect();
 
@@ -274,8 +278,6 @@ impl<T:Components,C:GlobalData> World<T,C> {
 			removed_important_entities.dedup();
 			system.process_removed(removed_important_entities,self);
 		}
-
-
 	}
 }
 

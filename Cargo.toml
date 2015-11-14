@@ -1,11 +1,11 @@
 [package]
 name = "sscs"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Johann Tael <jntael@gmail.com>"]
 
 [dependencies]
-rustc-serialize = "*"
+rustc-serialize = "0.3"
 
 [dev-dependencies]
-ncurses = "*"
+ncurses = "5.73"
 rand    = "0.3"
