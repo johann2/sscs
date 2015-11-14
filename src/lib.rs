@@ -100,16 +100,6 @@ pub trait Components {
 	fn extend(&mut self);
 }
 
-///Trait for data not directly associated with entities
-pub trait GlobalData {
-	fn new() -> Self;
-}
-
-impl GlobalData for () {
-	fn new() -> ()
-	{()}
-}
-
 ///Trait for components access
 pub trait ComponentAccess<T>:Sized {
 	///Returns the mask used to check component ownership
@@ -122,12 +112,12 @@ pub trait ComponentAccess<T>:Sized {
 
 
 
-impl<T:Components,C:GlobalData> World<T,C> {
+impl<T:Components,C> World<T,C> {
 	///Creates a new `World`
-	pub fn new()->World<T,C> {
+	pub fn new(global_data:C)->World<T,C> {
 		World {
 			component_data:T::new(),
-			global_data:C::new(),
+			global_data:global_data,
 			entities:Vec::new(),
 			recycled_ids:Vec::new(),
 			entities_to_delete:Vec::new(),

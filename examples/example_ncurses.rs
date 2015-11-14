@@ -104,7 +104,7 @@ fn main() {
 	let mut movement_system=MovementSystem;
 	let mut render_system=RenderSystem;
 
-	let mut world=ExampleWorld::new();
+	let mut world=ExampleWorld::new(());
 	let mut systems=Vec::new();
 	systems.push(&mut movement_system as &mut System<ExampleWorld>);
 	systems.push(&mut render_system as &mut System<ExampleWorld>);

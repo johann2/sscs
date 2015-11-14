@@ -42,7 +42,7 @@ type TestWorld=World<EntityData,()>;
 
 #[test]
 fn test_id_recycle() {
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	let mut systems=Vec::new();
 	let entity1=ecs.add_entity();
 	let entity2=ecs.add_entity();
@@ -67,7 +67,7 @@ fn test_id_recycle() {
 
 #[test]
 fn test_invalidation() {
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	let mut systems=Vec::new();
 	let entity1=ecs.add_entity();
 	let entity2=ecs.add_entity();
@@ -88,7 +88,7 @@ fn test_invalidation() {
 
 #[test]
 fn component_add() {
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	let mut systems=Vec::new();
 	let entity1=ecs.add_entity();
 
@@ -102,7 +102,7 @@ fn component_add() {
 
 #[test]
 fn component_remove() {
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	let mut systems=Vec::new();
 	let entity1=ecs.add_entity();
 
@@ -127,7 +127,7 @@ fn component_remove() {
 
 #[test]
 fn component_remove_with_entity() {
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	let mut systems=Vec::new();
 	let entity1=ecs.add_entity();
 	ecs.add(&entity1,Speed{val:Vector2{x:0.0,y:1.0}});
@@ -207,7 +207,7 @@ fn system_filter()
 {
 	let mut test_system=TestSystem;
 	let mut systems=Vec::new();
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	systems.push(&mut test_system as &mut System<TestWorld>);
 
 	for _ in 0..4
@@ -245,7 +245,7 @@ fn system_add_remove_entities()
 {
 	let mut test_system=TestSystem2;
 	let mut systems=Vec::new();
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	systems.push(&mut test_system as &mut System<TestWorld>);
 
 	for _ in 0..4
@@ -295,7 +295,7 @@ fn mutable_system()
 {
 	let mut mutable_system=MutableTestSystem{val:0.0};
 	let mut systems=Vec::new();
-	let mut ecs=TestWorld::new();
+	let mut ecs=TestWorld::new(());
 	systems.push(&mut mutable_system as &mut System<TestWorld>);
 
 	for _ in 0..10
