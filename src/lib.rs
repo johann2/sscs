@@ -2,6 +2,7 @@ extern crate rustc_serialize;
 use std::mem;
 
 ///Generates a struct for entity data with required traits.
+///
 ///between {} should be a list of components formatted like this:
 ///ComponentType:component_array_name:id,
 ///id must be unique for each component and a power of two.
