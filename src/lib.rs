@@ -7,23 +7,27 @@ use std::mem;
 ///ComponentType:component_array_name:id,
 ///id must be unique for each component and a power of two.
 ///For example: 
+///
 ///```
-///impl_entity_data! {
-///	EntityData {
-///		Speed:speeds:1<<1,
-///		Position:positions:1<<2,
-///		Sprite:sprites:1<<3
-///	}
-///}
+/// impl_entity_data! {
+/// 	EntityData {
+/// 		Speed:speeds:1<<1,
+/// 		Position:positions:1<<2,
+/// 		Sprite:sprites:1<<3
+/// 	}
+/// }
 ///```
+///
 ///generates a struct that looks like this:
+///
 ///```
-///pub struct EntityData {
-///	speeds:Vec<Speed>,
-///	positions:Vec<Position>,
-///	sprites:Vec<Sprite>
-///}
+/// pub struct EntityData {
+/// 	speeds:Vec<Speed>,
+/// 	positions:Vec<Position>,
+/// 	sprites:Vec<Sprite>
+/// }
 ///```
+///
 
 #[macro_export]
 macro_rules! impl_entity_data {
@@ -196,6 +200,10 @@ impl<T:Components,C> World<T,C> {
 		self.entities_with_components(0)
 	}
 
+	///
+	pub fn get_component_mask(&self,entity:&Entity)->u32 {
+		self.components[entity.id]
+	}
 
 	///Checks if `entity` has a component of type `Z`
 	pub fn has<Z>(&self,entity:&Entity) -> bool 
