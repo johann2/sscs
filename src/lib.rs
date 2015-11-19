@@ -1,6 +1,6 @@
-extern crate rustc_serialize;
 use std::mem;
-
+extern crate rustc_serialize;
+use rustc_serialize::{Decodable,Encodable};
 ///Generates a struct for entity data with required traits.
 ///
 ///between {} should be a list of components formatted like this:
@@ -38,6 +38,7 @@ macro_rules! impl_entity_data {
 }=>
 
 {
+	#[derive(RustcEncodable,RustcDecodable)]
 	pub struct $entity_type_name {
 		$(
 		pub $plural:Vec<$datatype>,
@@ -92,6 +93,8 @@ impl Entity {
 }
 
 ///This struct holds everything related to entity-component system.
+
+#[derive(RustcEncodable,RustcDecodable)]
 pub struct World<T,C> {
 	entities:Vec<Entity>,
 	///Holds all the components attached to entities.
@@ -140,7 +143,7 @@ pub trait ComponentAccess<T>:Sized {
 
 
 
-impl<T:Components,C> World<T,C> {
+impl<T:Components,C:Encodable+Decodable> World<T,C> {
 	///Creates a new `World`
 	pub fn new(global_data:C)->World<T,C> {
 		World {
