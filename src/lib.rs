@@ -8,7 +8,7 @@ use rustc_serialize::{Decodable,Encodable};
 ///id must be unique for each component and a power of two.
 ///For example: 
 ///
-///```
+///```text
 /// impl_entity_data! {
 /// 	EntityData {
 /// 		Speed:speeds:1<<1,
@@ -20,7 +20,7 @@ use rustc_serialize::{Decodable,Encodable};
 ///
 ///generates a struct that looks like this:
 ///
-///```
+///```text
 /// pub struct EntityData {
 /// 	speeds:Vec<Speed>,
 /// 	positions:Vec<Position>,
@@ -261,12 +261,6 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 
 	///Removes entities marked for deletion and runs systems.
 	pub fn update(&mut self,systems:&mut Vec<&mut System<Self>>) {
-		for e in self.entities_to_delete.iter()	{
-			if self.entity_valid(e) {
-				self.components[e.id] = 0;
-				self.recycled_ids.push(self.entities[e.id]);
-			}
-		}
 
 		//Process
 		for system in systems.iter_mut() {
@@ -282,7 +276,7 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 			let sys_mask = system.get_entity_mask();
 
 			let mut added_important_entities:Vec<_>=added_entities.iter()
-				.filter(|&&(mask,_)| sys_mask&mask!=0 )
+				.filter(|&&(mask,_)| sys_mask&mask==sys_mask )
 				.map(|&(_,entity)| entity)
 				.collect();
 			added_important_entities.sort();
@@ -295,7 +289,7 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 			let sys_mask = system.get_entity_mask();
 
 			let mut removed_important_entities:Vec<_>=removed_entities.iter()
-				.filter(|&&(mask,_)| sys_mask&mask!=0 )
+				.filter(|&&(mask,_)| sys_mask&mask==sys_mask )
 				.map(|&(_,entity)| entity)
 				.collect();
 
@@ -303,6 +297,14 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 			removed_important_entities.dedup();
 			system.process_removed(removed_important_entities,self);
 		}
+
+		for e in self.entities_to_delete.iter()	{
+			if self.entity_valid(e) {
+				self.components[e.id] = 0;
+				self.recycled_ids.push(self.entities[e.id]);
+			}
+		}
+
 	}
 }
 

@@ -2,7 +2,7 @@
 extern crate sscs;
 extern crate rand;
 extern crate ncurses;
-
+extern crate rustc_serialize;
 use sscs::{System,World,Entity,ComponentAccess};
 use std::iter;
 use std::iter::FromIterator;
@@ -20,17 +20,17 @@ fn random_vector(mult:f32)->(f32,f32) {
 
 //Component structs
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Speed {
     val:(f32,f32)
 }
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Position {
     val:(f32,f32)
 }
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Character {
     val:char
 }

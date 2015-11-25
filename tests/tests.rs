@@ -1,29 +1,29 @@
 #[macro_use]
 extern crate sscs;
-
+extern crate rustc_serialize;
 use sscs::{World,Entity,System,ComponentAccess};
 
-#[derive(Clone,Copy,PartialEq,PartialOrd,Default)]
+#[derive(Clone,Copy,PartialEq,PartialOrd,Default,RustcDecodable,RustcEncodable)]
 struct Vector2{x:f32,y:f32}
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Speed {
     val:Vector2
 }
 
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Position {
     val:Vector2
 }
 
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Target {
     val:Option<Entity>,
 }
 
-#[derive(Clone,PartialEq,Default)]
+#[derive(Clone,PartialEq,Default,RustcDecodable,RustcEncodable)]
 pub struct Generic<T:Clone> {
 	val:T,
 }
