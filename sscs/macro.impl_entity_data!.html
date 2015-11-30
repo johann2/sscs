@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `impl_entity_data!` macro in crate `sscs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, impl_entity_data!">
+
+    <title>sscs::impl_entity_data! - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>sscs</a></p><script>window.sidebarCurrent = {name: 'impl_entity_data!', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content macro">
+<h1 class='fqn'><span class='in-band'><a href='index.html'>sscs</a>::<wbr><a class='macro' href=''>impl_entity_data!</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-2234' class='srclink' href='../src/sscs/lib.rs.html#33-79' title='goto source code'>[src]</a></span></h1>
+<pre class='rust macro'>
+<span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>impl_entity_data</span> {
+{
+	<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span>:<span class='ident'>ident</span> {
+		$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>datatype</span>:<span class='ident'>ty</span>:<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>:<span class='ident'>ident</span>:<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>mask</span>:<span class='ident'>expr</span>),<span class='op'>+</span>
+	}
+}<span class='op'>=&gt;</span>
+
+{
+	<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>,<span class='ident'>RustcDecodable</span>)]</span>
+	<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span> {
+		$(
+		<span class='kw'>pub</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>:<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>datatype</span><span class='op'>&gt;</span>,
+		)<span class='op'>+</span>
+	}
+
+	<span class='kw'>impl</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>crate</span>::<span class='ident'>Components</span> <span class='kw'>for</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span> {
+		<span class='kw'>fn</span> <span class='ident'>new</span>()<span class='op'>-&gt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span> {
+			<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span> {
+				$(
+				<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>:<span class='ident'>Vec</span>::<span class='ident'>new</span>(),
+				)<span class='op'>+</span>
+			}
+		}
+		<span class='kw'>fn</span> <span class='ident'>extend</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) {
+			$(
+			<span class='self'>self</span>.<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>.<span class='ident'>push</span>(<span class='ident'>Default</span>::<span class='ident'>default</span>());
+			)<span class='op'>+</span>
+		}
+	}
+
+	$(
+	<span class='kw'>impl</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>crate</span>::<span class='ident'>ComponentAccess</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>datatype</span> {
+		<span class='kw'>fn</span> <span class='ident'>mask</span>()<span class='op'>-&gt;</span><span class='ident'>u32</span> {
+			<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>mask</span>
+		}
+
+		<span class='kw'>fn</span> <span class='ident'>get_data</span>(<span class='ident'>comps</span>:<span class='kw-2'>&amp;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span>)<span class='op'>-&gt;</span><span class='kw-2'>&amp;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>datatype</span><span class='op'>&gt;</span> {
+			<span class='kw-2'>&amp;</span><span class='ident'>comps</span>.<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>
+		}
+
+		<span class='kw'>fn</span> <span class='ident'>get_data_mut</span>(<span class='ident'>comps</span>:<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>entity_type_name</span>)<span class='op'>-&gt;</span><span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>datatype</span><span class='op'>&gt;</span> {
+			<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>comps</span>.<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>plural</span>
+		}
+	}
+	)<span class='op'>+</span>
+}
+}</pre>
+<div class='docblock'><p>Generates a struct for entity data with required traits.</p>
+
+<p>between {} should be a list of components formatted like this:
+ComponentType:component_array_name:id,
+id must be unique for each component and a power of two.
+For example: </p>
+
+<pre><code class="language-text"> impl_entity_data! {
+    EntityData {
+        Speed:speeds:1&lt;&lt;1,
+        Position:positions:1&lt;&lt;2,
+        Sprite:sprites:1&lt;&lt;3
+    }
+ }
+</code></pre>
+
+<p>generates a struct that looks like this:</p>
+
+<pre><code class="language-text"> pub struct EntityData {
+    speeds:Vec&lt;Speed&gt;,
+    positions:Vec&lt;Position&gt;,
+    sprites:Vec&lt;Sprite&gt;
+ }
+</code></pre>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "sscs";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `World` struct in crate `sscs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, World">
+
+    <title>sscs::World - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>sscs</a></p><script>window.sidebarCurrent = {name: 'World', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>sscs</a>::<wbr><a class='struct' href=''>World</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-791' class='srclink' href='../src/sscs/lib.rs.html#98-110' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct World&lt;T, C&gt; {
+    pub component_data: T,
+    pub global_data: C,
+    // some fields omitted
+}</pre><div class='docblock'><p>This struct holds everything related to entity-component system.</p>
+</div><h2 class='fields'>Fields</h2>
+<table><tr class='stab '>
+                                  <td id='structfield.component_data'><code>component_data</code></td><td><div class='docblock'><p>Holds all the components attached to entities.</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.global_data'><code>global_data</code></td><td><div class='docblock'><p>Holds all data that isn&#39;t related to any entit.y</p>
+</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../sscs/trait.Components.html' title='sscs::Components'>Components</a>, C: <a class='trait' href='../rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a> + <a class='trait' href='../rustc_serialize/serialize/trait.Decodable.html' title='rustc_serialize::serialize::Decodable'>Decodable</a>&gt; <a class='struct' href='../sscs/struct.World.html' title='sscs::World'>World</a>&lt;T, C&gt;</code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>(global_data: C) -&gt; <a class='struct' href='../sscs/struct.World.html' title='sscs::World'>World</a>&lt;T, C&gt;</code></h4>
+<div class='docblock'><p>Creates a new <code>World</code></p>
+</div><h4 id='method.add_entity' class='method'><code>fn <a href='#method.add_entity' class='fnname'>add_entity</a>(&amp;mut self) -&gt; <a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a></code></h4>
+<div class='docblock'><p>Adds a new entity with no components</p>
+</div><h4 id='method.delete_entity' class='method'><code>fn <a href='#method.delete_entity' class='fnname'>delete_entity</a>(&amp;mut self, e: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>)</code></h4>
+<div class='docblock'><p>Marks an entity for deletion.
+The entity gets actually deleted the next time you call <code>update</code></p>
+</div><h4 id='method.entity_valid' class='method'><code>fn <a href='#method.entity_valid' class='fnname'>entity_valid</a>(&amp;self, e: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) -&gt; <a href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<div class='docblock'><p>Check if an entity actually exists.</p>
+</div><h4 id='method.entities_with_components' class='method'><code>fn <a href='#method.entities_with_components' class='fnname'>entities_with_components</a>(&amp;self, mask: <a href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>&gt;</code></h4>
+<div class='docblock'><p>Returns all entities that have at least the components specified by <code>mask</code></p>
+</div><h4 id='method.entities' class='method'><code>fn <a href='#method.entities' class='fnname'>entities</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>&gt;</code></h4>
+<div class='docblock'><p>Returns all valid entities</p>
+</div><h4 id='method.get_component_mask' class='method'><code>fn <a href='#method.get_component_mask' class='fnname'>get_component_mask</a>(&amp;self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) -&gt; <a href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a></code></h4>
+<div class='docblock'></div><h4 id='method.has' class='method'><code>fn <a href='#method.has' class='fnname'>has</a>&lt;Z&gt;(&amp;self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) -&gt; <a href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a> <span class='where'>where Z: <a class='trait' href='../sscs/trait.ComponentAccess.html' title='sscs::ComponentAccess'>ComponentAccess</a>&lt;T&gt;</span></code></h4>
+<div class='docblock'><p>Checks if <code>entity</code> has a component of type <code>Z</code></p>
+</div><h4 id='method.get' class='method'><code>fn <a href='#method.get' class='fnname'>get</a>&lt;Z&gt;(&amp;self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;Z&gt; <span class='where'>where Z: <a class='trait' href='../sscs/trait.ComponentAccess.html' title='sscs::ComponentAccess'>ComponentAccess</a>&lt;T&gt;</span></code></h4>
+<div class='docblock'><p>Returns a reference to component <code>Z</code> attached to `entity</p>
+</div><h4 id='method.get_mut' class='method'><code>fn <a href='#method.get_mut' class='fnname'>get_mut</a>&lt;Z&gt;(&amp;mut self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;mut Z&gt; <span class='where'>where Z: <a class='trait' href='../sscs/trait.ComponentAccess.html' title='sscs::ComponentAccess'>ComponentAccess</a>&lt;T&gt;</span></code></h4>
+<div class='docblock'><p>Returns a mutable reference to component <code>Z</code> attached to <code>entity</code></p>
+</div><h4 id='method.add' class='method'><code>fn <a href='#method.add' class='fnname'>add</a>&lt;Z&gt;(&amp;mut self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>, comp: Z) <span class='where'>where Z: <a class='trait' href='../sscs/trait.ComponentAccess.html' title='sscs::ComponentAccess'>ComponentAccess</a>&lt;T&gt;</span></code></h4>
+<div class='docblock'><p>Adds a component of type <code>Z</code> to <code>entity</code>
+If entity already has component of this type, it gets overwritten.</p>
+</div><h4 id='method.remove' class='method'><code>fn <a href='#method.remove' class='fnname'>remove</a>&lt;Z&gt;(&amp;mut self, entity: &amp;<a class='struct' href='../sscs/struct.Entity.html' title='sscs::Entity'>Entity</a>) <span class='where'>where Z: <a class='trait' href='../sscs/trait.ComponentAccess.html' title='sscs::ComponentAccess'>ComponentAccess</a>&lt;T&gt;</span></code></h4>
+<div class='docblock'><p>Removes a component of type <code>Z</code> from <code>entity</code>
+If entity doesn&#39;t own component <code>Z</code>, this function does nothing.</p>
+</div><h4 id='method.update' class='method'><code>fn <a href='#method.update' class='fnname'>update</a>(&amp;mut self, systems: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;&amp;mut <a class='trait' href='../sscs/trait.System.html' title='sscs::System'>System</a>&lt;Self&gt;&gt;)</code></h4>
+<div class='docblock'><p>Removes entities marked for deletion and runs systems.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../rustc_serialize/serialize/trait.Decodable.html' title='rustc_serialize::serialize::Decodable'>Decodable</a>, C: <a class='trait' href='../rustc_serialize/serialize/trait.Decodable.html' title='rustc_serialize::serialize::Decodable'>Decodable</a>&gt; <a class='trait' href='../rustc_serialize/serialize/trait.Decodable.html' title='rustc_serialize::serialize::Decodable'>Decodable</a> for <a class='struct' href='../sscs/struct.World.html' title='sscs::World'>World</a>&lt;T, C&gt;</code></h3><div class='impl-items'><h4 id='method.decode' class='method'><code>fn <a href='../rustc_serialize/serialize/trait.Decodable.html#method.decode' class='fnname'>decode</a>&lt;__D: <a class='trait' href='../rustc_serialize/serialize/trait.Decoder.html' title='rustc_serialize::serialize::Decoder'>Decoder</a>&gt;(__arg_0: &amp;mut __D) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../sscs/struct.World.html' title='sscs::World'>World</a>&lt;T, C&gt;, __D::Error&gt;</code></h4>
+</div><h3 class='impl'><code>impl&lt;T: <a class='trait' href='../rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a>, C: <a class='trait' href='../rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a>&gt; <a class='trait' href='../rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a> for <a class='struct' href='../sscs/struct.World.html' title='sscs::World'>World</a>&lt;T, C&gt;</code></h3><div class='impl-items'><h4 id='method.encode' class='method'><code>fn <a href='../rustc_serialize/serialize/trait.Encodable.html#method.encode' class='fnname'>encode</a>&lt;__S: <a class='trait' href='../rustc_serialize/serialize/trait.Encoder.html' title='rustc_serialize::serialize::Encoder'>Encoder</a>&gt;(&amp;self, __arg_0: &amp;mut __S) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, __S::Error&gt;</code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "sscs";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>
