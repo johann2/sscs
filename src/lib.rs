@@ -242,9 +242,9 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 		assert!(self.entity_valid(&entity));
 		Z::get_data_mut(&mut self.component_data)[entity.id] = comp;
 		if self.components[entity.id] & Z::mask() == 0 {
-			self.added.push((Z::mask(),*entity));
+			self.components[entity.id] |= Z::mask();
+			self.added.push((self.components[entity.id],*entity));
 		}
-		self.components[entity.id] |= Z::mask();
 	}
 
 	///Removes a component of type `Z` from `entity`
@@ -253,7 +253,7 @@ impl<T:Components,C:Encodable+Decodable> World<T,C> {
 	where Z:ComponentAccess<T> {
 		assert!(self.entity_valid(&entity));
 		if self.components[entity.id] & Z::mask() != 0 {
-			self.removed.push((Z::mask(),*entity));
+			self.removed.push((self.components[entity.id],*entity));
 			self.components[entity.id] ^= Z::mask();
 		}
 	}
